@@ -61,8 +61,9 @@ class Handler {
   async setPurifierTargetState(state) {
     try {
       const values = {
-        mode: state ? 'P' : this.accessory.context.config.allergicFunc ? 'A' : 'M',
+        mode: state ? 'P' : this.accessory.context.config.allergicFunc ? 'AG' : 'M',
       };
+      logger.warn(`setPurifierTargetState: ${values.mode} ${state}`)
 
       if (state != 0) {
         this.purifierService
@@ -73,7 +74,7 @@ class Handler {
       const args = [...this.args];
       args.push('set', `mode=${values.mode}`);
 
-      logger.info(`Purifier Mode: ${state}`, this.accessory.displayName);
+      logger.warn(`Purifier Mode: ${state}`, this.accessory.displayName);
 
       await this.sendCMD(args);
     } catch (err) {
@@ -115,21 +116,23 @@ class Handler {
       if (speed > 0) {
         const values = {
           mode: 'M',
-          om: '',
         };
 
-        if (offset == 1 && speed == 1) {
-          values.om = 's';
-        } else if (speed < 4 + offset) {
-          values.om = (speed - offset).toString();
-        } else {
-          values.om = 't';
+	logger.warn(`speed: ${speed}, value:${value}`)
+
+        if (speed === 1) {
+          values.mode = 'S';
+        } else if (speed === 5) {
+	  values.mode = 'T';
+	} else {
+          values.mode = 'AG';
         }
+	logger.warn(`TEST!!! ${values.mode}`);
 
         this.purifierService.updateCharacteristic(this.api.hap.Characteristic.TargetAirPurifierState, 0);
 
         const args = [...this.args];
-        args.push('set', `mode=${values.mode} om=${values.om}`);
+        args.push('set', `mode=${values.mode}`);
 
         logger.info(`Purifier Rotation Speed: ${value}`, this.accessory.displayName);
 
